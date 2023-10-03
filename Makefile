@@ -1,2 +1,4 @@
-venv:
-	python -m venv .venv
+MAIN=bot.py
+
+run: $(MAIN)
+	.venv/bin/python $(MAIN)
