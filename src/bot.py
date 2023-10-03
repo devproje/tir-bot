@@ -16,8 +16,7 @@ async def on_ready():
     print("Logged in as {}".format(bot.user))
 
 @bot.tree.command(name="ping", description="Discord API의 레이턴시를 확인 합니다")
-@app_commands.describe()
 async def ping(interaction: discord.Interaction):
-    interaction.response.send_message("Pong! {}ms".format(round(interaction.client.latency)))
+    await interaction.response.send_message("Pong! {}ms".format(round(interaction.client.latency)))
 
 bot.run(os.getenv("TOKEN"))
