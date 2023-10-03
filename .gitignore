@@ -1,0 +1,7 @@
+__pycache__/
+
+# dotenv
+.env
+
+# virtualenv
+.venv/
