@@ -25,6 +25,10 @@ class Tir(commands.Cog):
     async def tir(self, ctx: commands.Context, str):
         match str:
             case "학습량":
+                if ctx.author.id != int(os.getenv("OWNER")):
+                    await ctx.reply("이 명령어는 봇 관리자만 사용 할 수 있습니다", mention_author=False)
+                    return
+
                 dt = "```yaml\n"
                 i = 0
                 for d in coll.find({}):
