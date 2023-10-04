@@ -1,0 +1,27 @@
+version: "3.9"
+
+services:
+  bot:
+    container_name: "tir_bot"
+    image: "tir_bot"
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+    volumes:
+      - "/etc/localtime:/etc/localtime:ro"
+    restart: always
+    networks:
+      - "tirbot"
+  
+  db:
+    container_name: "tir_bot_db"
+    image: "mongo:latest"
+    volumes:
+      - "./data:/data/db"
+      - "/etc/localtime:/etc/localtime:ro"
+    restart: always
+    networks:
+      - "tirbot"
+
+networks:
+  tirbot: {}
