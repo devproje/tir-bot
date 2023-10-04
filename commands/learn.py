@@ -1,11 +1,10 @@
 import os
-from pymongo import MongoClient
-from pymongo.server_api import ServerApi
+from utils.data import database
 from discord.ext import commands
 
-client = MongoClient(os.getenv("MONGO_URL"), server_api=ServerApi("1"))
-db = client["tir_bot"]
-coll = db["learn"]
+coll = database["learn"]
+ignore = ["학습량", "티르봇", "프젝", "프로젝트"]
+disallowed = ["@everyone", "@here"]
 
 class Learn(commands.Cog):
     def __init__(self, bot):
@@ -22,36 +21,53 @@ class Learn(commands.Cog):
         return False
 
     @commands.command(name="배워")
-    async def learn(self, ctx: commands.Context, str, *, message):
-        if str == "학습량":
-            await ctx.reply("이 단어는 배울 수 없는 단어예요")
-            return
-        
+    async def learn(self, ctx: commands.Context, str, *, message: str):
+        for i in ignore:
+            if str == i:
+                await ctx.reply("이 단어는 배울 수 없는 단어예요", mention_author=False)
+                return
+            
+        for i in disallowed:
+            if message in i:
+                await ctx.reply("이 단어의 설명은 금지된 말이에요", mention_author=False)
+                return
+
         if not self.exist(str):
             coll.insert_one({
                 "str": str,
                 "message": message,
-                "author_id": ctx.author.id,
-                "author_name": ctx.author.name
+                "author": ctx.author.name,
+                "author_id": ctx.author.id
             })
             await ctx.reply("\"{}\"라는 단어를 배웠어요".format(str), mention_author=False)
             return
         
         data = self.get_data(str)
-        await ctx.reply("이미 \"{}\"라는 단어를 {}님한테서 배웠어요".format(data["str"], data["author_name"]), mention_author=False)
+        if ctx.author.id == int(data["author_id"]):
+            coll.update_one({"str": str}, {
+                "$set": {
+                    "message": message
+                }
+            })
+
+            await ctx.reply("\"{}\"라는 단어를 다시 배웠어요".format(str), mention_author=False)
+            return
+        
+        await ctx.reply("이미 \"{}\"라는 단어를 {}님한테서 배웠어요".format(data["str"], data["author"]), mention_author=False)
 
     @commands.command(name="잊어")
     async def forget(self, ctx: commands.Context, str):
-        if str == "학습량":
-            await ctx.reply("이 단어는 잊을 수 없는 단어예요")
-            return
+        for i in ignore:
+            if str == i:
+                await ctx.reply("이 단어는 잊을 수 없는 단어예요", mention_author=False)
+                return
             
         if not self.exist(str):
             await ctx.reply("\"{}\"라는 단어를 배운적이 없어요".format(str), mention_author=False)
             return
         
         data = self.get_data(str)
-        if int(data["author_id"]) != ctx.author.id:
+        if ctx.author.id != int(data["author_id"]) and ctx.author.id != int(os.getenv("OWNER")):
             await ctx.reply("\"{}\"라는 말을 가르친 사람이 아니예요".format(str), mention_author=False)
             return
         

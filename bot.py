@@ -2,22 +2,16 @@ import os
 import discord
 from dotenv import load_dotenv
 from discord.ext import commands
-from pymongo import MongoClient
-from pymongo.server_api import ServerApi
+from utils.data import ping_database
 
+# load env file
 load_dotenv()
+
+# connection test
+ping_database()
 
 intents = discord.Intents.default()
 intents.message_content = True
-
-# connection test
-client = MongoClient(os.getenv("MONGO_URL"), server_api=ServerApi("1"))
-
-try:
-    client.admin.command("ping")
-    print("Database connected!")
-except Exception as err:
-    print(err)
 
 bot = commands.Bot(command_prefix="$", intents=intents)
 
@@ -36,6 +30,9 @@ async def on_ready():
 
 @bot.command(name="reload")
 async def hotswap_reload(ctx: commands.Context):
+    if os.getenv("DEV_MODE") != "1":
+        return
+
     if ctx.author.id != int(os.getenv("OWNER")):
         await ctx.reply("이 명령어는 봇 관리자만 사용 할 수 있습니다", mention_author=False)
         return
